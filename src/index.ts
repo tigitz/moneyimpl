@@ -1,6 +1,7 @@
 import Big from 'big.js';
 import {dinero, Dinero, toSnapshot, toUnit as dineroToUnit} from 'dinero.js';
 import { createDinero, Calculator} from '@dinero.js/core';
+
 import {Currency} from "@dinero.js/currencies/dist/esm/types";
 import {USD} from "@dinero.js/currencies";
 
@@ -90,7 +91,6 @@ console.log(dineroToUnit(dinero({amount: 1000000000000000050, currency: USD})));
 
 console.log(toUnit(dineroMAGBigJsWithFormatter));
 console.log(toDecimalUnit(dineroMAGBigJsWithFormatter));
-
 
 
 
