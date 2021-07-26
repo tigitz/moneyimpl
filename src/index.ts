@@ -1,14 +1,8 @@
 import Big from 'big.js';
-import {Calculator, createDinero, dinero, Dinero, toSnapshot} from 'dinero.js';
-import {
-    BinaryOperation,
-    DineroOptions,
-    DineroSnapshot,
-    TransformOperation,
-    UnaryOperation
-} from "@dinero.js/core/dist/esm/types";
-import {CreateDineroOptions} from "@dinero.js/core/dist/esm/helpers/createDinero";
+import {dinero, Dinero, toSnapshot, toUnit as dineroToUnit} from 'dinero.js';
+import { createDinero, Calculator} from '@dinero.js/core';
 import {Currency} from "@dinero.js/currencies/dist/esm/types";
+import {USD} from "@dinero.js/currencies";
 
 declare type Formatter<TInput> = {
     readonly toUnit: (amount: TInput) => string;
@@ -46,11 +40,16 @@ const bigJSformatter: Formatter<Dinero<Big>> = {
     toDecimalUnit: (money) => {
         const {amount, currency} = toSnapshot(money)
 
-        if(!currency.base.eq(Big(10))) {
-            throw new Error(`${currency} currency is not in base 10 so it can't reliably have a decimal representation`)
+        // https://en.wikipedia.org/wiki/ISO_4217#cite_note-divby5-13
+        if(['MGA', 'MRU'].includes(currency.code)) {
+            return `${amount.div(currency.base.pow(currency.exponent.toNumber())).toString()} ${currency.code}`
         }
 
-        return `${amount.div(currency.exponent.mul(currency.base))} ${currency.code}`
+        if(!currency.base.eq(Big(10))) {
+            throw new Error(`"${currency.code}" currency is not in base 10 so it can't reliably have a decimal representation`)
+        }
+
+        return `${amount.div(currency.base.pow(currency.exponent.toNumber())).toFixed(currency.exponent.toNumber())} ${currency.code}`
     },
 };
 
@@ -59,17 +58,39 @@ const USDbigJs: Currency<Big> = {
     base: Big(10),
     exponent: Big(2),
 }
+
+const MGAbigJs: Currency<Big> = {
+    code: 'MGA',
+    base: Big(5),
+    exponent: Big(1),
+}
+
 const dineroBigJs = createDinero({ calculator });
 
-const dineroBigJsWithFormatter: DineroWithFormatter<Big> = {
-    dinero: dineroBigJs({amount: Big('1000'), currency: USDbigJs}),
+const dineroUSDBigJsWithFormatter: DineroWithFormatter<Big> = {
+    dinero: dineroBigJs({amount: Big('1000000000000000050'), currency: USDbigJs}),
     formatter: bigJSformatter
 }
+const dineroMAGBigJsWithFormatter: DineroWithFormatter<Big> = {
+    dinero: dineroBigJs({amount: Big('1'), currency: MGAbigJs}),
+    formatter: bigJSformatter
+}
+
 
 const toUnit: (dineroWithFormatter: DineroWithFormatter<any>) => string = (dineroWithFormatter) => {
     return dineroWithFormatter.formatter.toUnit(dineroWithFormatter.dinero);
 }
+const toDecimalUnit: (dineroWithFormatter: DineroWithFormatter<any>) => string = (dineroWithFormatter) => {
+    return dineroWithFormatter.formatter.toDecimalUnit(dineroWithFormatter.dinero);
+}
 
-toUnit(dineroBigJsWithFormatter)
+console.log(toUnit(dineroUSDBigJsWithFormatter));
+console.log(toDecimalUnit(dineroUSDBigJsWithFormatter));
+console.log(dineroToUnit(dinero({amount: 1000000000000000050, currency: USD})));
+
+console.log(toUnit(dineroMAGBigJsWithFormatter));
+console.log(toDecimalUnit(dineroMAGBigJsWithFormatter));
+
+
 
 
