@@ -85,12 +85,52 @@ const toDecimalUnit: (dineroWithFormatter: DineroWithFormatter<any>) => string =
     return dineroWithFormatter.formatter.toDecimalUnit(dineroWithFormatter.dinero);
 }
 
+
 console.log(toUnit(dineroUSDBigJsWithFormatter));
 console.log(toDecimalUnit(dineroUSDBigJsWithFormatter));
 console.log(dineroToUnit(dinero({amount: 1000000000000000050, currency: USD})));
 
 console.log(toUnit(dineroMAGBigJsWithFormatter));
 console.log(toDecimalUnit(dineroMAGBigJsWithFormatter));
+
+
+enum Locale {
+    fr_FR = 'fr-FR',
+    en_US = 'en-US',
+}
+
+type NewCurrencySubUnit = {
+    name: {[key in Locale]: string},
+    fraction: number,
+    subunit?: NewCurrencySubUnit
+}
+
+type NewCurrencyUnit = {
+    code: string,
+    name: {[key in Locale]: string},
+    subunit?: NewCurrencySubUnit,
+}
+
+const MGA: NewCurrencyUnit = {
+    code: 'MGA',
+    name: {'fr-FR': 'ariary', 'en-US': 'Malagasy ariary' },
+    subunit: {
+        name: {'fr-FR': 'iraimbilanja', 'en-US': 'iraimbilanja' },
+        fraction: 5,
+        subunit: undefined
+    },
+}
+
+const formatter = ((units: Array<{amount: number, currency: NewCurrencyUnit}>, locale: Locale) => {
+    units.map(({amount, currency}) => {
+        `${amount} ${currency.name[locale]}`
+    }).join(' and ')
+})
+
+
+
+
+
 
 
 
